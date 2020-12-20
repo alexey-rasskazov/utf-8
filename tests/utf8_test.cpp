@@ -200,3 +200,177 @@ TEST(IsUTF8Test, sequence_trim_4_bytes)
     buf[2] = 0x80;
     EXPECT_FALSE(is_utf8(buf));
 }
+
+TEST(FixUTF8Test, empty)
+{
+    EXPECT_EQ(fix_utf8("", "*"), "");
+}
+
+TEST(FixUTF8Test, sequence_1_byte)
+{
+    char buf[] = "1234";
+    buf[1] = 0xFF;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "1*34");
+    buf[3] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "1*3*");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**3*");
+}
+
+TEST(FixUTF8Test, sequence_2_bytes_first)
+{
+    char buf[] = "фЫваолдж";
+    buf[2] = 0xFF;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "ф**ваолдж");
+    buf[14] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "ф**ваолд**");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "****ваолд**");
+}
+
+TEST(FixUTF8Test, sequence_2_bytes_second)
+{
+    char buf[] = "фЫваолдж";
+    buf[3] = 0x7F;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "ф*ваолдж");
+    buf[15] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "ф*ваолд*");
+    buf[1] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**ваолд*");
+}
+
+TEST(FixUTF8Test, sequence_3_bytes_first)
+{
+    char buf[] = "_ह_€_한";
+    buf[1] = 0xFF;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_***_€_한");
+    buf[9] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_***_€_***");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "****_€_***");
+}
+
+TEST(FixUTF8Test, sequence_3_bytes_second)
+{
+    char buf[] = "_ह_€_한";
+    buf[2] = 0x7F;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_한");
+    buf[10] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_*");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**_€_*");
+}
+
+TEST(FixUTF8Test, sequence_3_bytes_third)
+{
+    char buf[] = "_ह_€_한";
+    buf[3] = 0x7F;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_한");
+    buf[11] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_*");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**_€_*");
+}
+
+TEST(FixUTF8Test, sequence_4_bytes_first)
+{
+    char buf[] = "_􏿿_𐍈_😁";
+    buf[1] = 0xFF;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_****_𐍈_😁");
+    buf[11] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_****_𐍈_****");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "*****_𐍈_****");
+}
+
+TEST(FixUTF8Test, sequence_4_bytes_second)
+{
+    char buf[] = "_􏿿_𐍈_😁";
+    buf[2] = 0x7F;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
+    buf[12] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_*");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**_𐍈_*");
+}
+
+TEST(FixUTF8Test, sequence_4_bytes_third)
+{
+    char buf[] = "_􏿿_𐍈_😁";
+    buf[3] = 0x7F;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
+    buf[13] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_*");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**_𐍈_*");
+}
+
+TEST(FixUTF8Test, sequence_4_bytes_fourth)
+{
+    char buf[] = "_􏿿_𐍈_😁";
+    buf[4] = 0x7F;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
+    buf[14] = 0x7F;
+    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_*");
+    buf[0] = 0xFF;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**_𐍈_*");
+}
+
+TEST(FixUTF8Test, sequence_2_bytes_1_char_trim)
+{
+    char buf1[] = "1";
+    buf1[0] = 0xC2;
+
+    EXPECT_EQ(fix_utf8(buf1, "*"), "*");
+}
+
+TEST(FixUTF8Test, sequence_3_bytes_1_char_trim)
+{
+    char buf1[] = "1";
+    buf1[0] = 0xE0;
+    char buf2[] = "12";
+    buf2[0] = 0xE0;
+    buf2[1] = 0xA0;
+
+    EXPECT_EQ(fix_utf8(buf1, "*"), "*");
+    EXPECT_EQ(fix_utf8(buf2, "*"), "*");
+}
+
+TEST(FixUTF8Test, sequence_4_bytes_1_char_trim)
+{
+    char buf1[] = "1";
+    buf1[0] = 0xF0;
+    char buf2[] = "12";
+    buf2[0] = 0xF4;
+    buf2[1] = 0x80;
+    char buf3[] = "123";
+    buf3[0] = 0xF4;
+    buf3[1] = 0x80;
+    buf3[2] = 0x80;
+
+    EXPECT_EQ(fix_utf8(buf1, "*"), "*");
+    EXPECT_EQ(fix_utf8(buf2, "*"), "*");
+    EXPECT_EQ(fix_utf8(buf3, "*"), "*");
+}
+
+TEST(FixUTF8Test, sequence_imcomplete)
+{
+    char buf[] = "01Ы4_€9_😁";
+    buf[0] = 0xC2;
+    buf[6] = 0xF0;
+    buf[10] = 0xE0;
+
+    EXPECT_EQ(fix_utf8(buf, "*"), "*Ы4_****");
+    buf[2] = 0xE1;
+    EXPECT_EQ(fix_utf8(buf, "*"), "**_****");
+}

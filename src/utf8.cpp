@@ -134,3 +134,48 @@ bool utf8::is_utf8(const std::string& str)
 {
     return is_utf8(str.c_str());
 }
+
+/**
+ * Fix UTF-8 characters
+ */
+std::string utf8::fix_utf8(const std::string& src, const std::string& replacement)
+{
+    const char* start = src.c_str();
+    int num_bytes;
+
+    const char* pos = find_invalid_byte(start, num_bytes);
+    
+    if (pos == nullptr)
+    {
+        return src;
+    }
+    
+    std::string res;
+    res.reserve(src.length());
+    const char *prev = start;
+
+    do
+    {
+        if (pos - prev > 0)
+        {
+            res.append(src.substr(prev - start, pos - prev));
+        }
+        if (!replacement.empty())
+        {
+            res.append(replacement);
+        }
+        prev = pos + num_bytes;
+        if (prev - start >= src.length())
+        {
+            break;
+        }
+        pos = find_invalid_byte(prev, num_bytes);
+    } while (pos);
+
+    if (prev - start < src.length())
+    {
+        res.append(src.substr(prev - start));
+    }
+
+    return res;
+}
