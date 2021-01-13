@@ -153,6 +153,7 @@ std::string utf8::fix_utf8(const std::string& src, const std::string& replacemen
     std::string res;
     res.reserve(src.length());
     const char *prev = start;
+    const int64_t length = static_cast<int64_t>(src.length());
 
     do
     {
@@ -165,14 +166,14 @@ std::string utf8::fix_utf8(const std::string& src, const std::string& replacemen
             res.append(replacement);
         }
         prev = pos + num_bytes;
-        if (prev - start >= src.length())
+        if (prev - start >= length)
         {
             break;
         }
         pos = find_invalid_byte(prev, num_bytes);
     } while (pos);
 
-    if (prev - start < src.length())
+    if (prev - start < length)
     {
         res.append(src.substr(prev - start));
     }
