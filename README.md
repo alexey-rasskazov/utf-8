@@ -1,4 +1,5 @@
 # UTF-8 C++ Utilities
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/alexey-rasskazov/utf-8.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/alexey-rasskazov/utf-8/context:cpp)
 
 A C++ library containing utility functions that help to operate with UTF-8 encoding.
 
