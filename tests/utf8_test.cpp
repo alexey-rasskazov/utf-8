@@ -25,6 +25,12 @@ using namespace utf8;
 // As a consequence of the well-formedness conditions specified in Table 3-7, the following
 // byte values are disallowed in UTF-8: C0–C1, F5–FF.
 
+using u8t = std::decay_t<decltype(u8""[0])>; // char until C++20, char8_t since C++20
+
+#define U8BUF(text) \
+    u8t u8buf[] = text; \
+    char *buf = reinterpret_cast<char*>(u8buf);
+
 TEST(IsUTF8Test, empty)
 {
     EXPECT_TRUE(is_utf8(""));
@@ -32,7 +38,7 @@ TEST(IsUTF8Test, empty)
 
 TEST(IsUTF8Test, sequence_1_byte)
 {
-    char buf[] = "1234";
+    U8BUF(u8"1234")
     buf[1] = 0xFF;
 
     EXPECT_TRUE(is_utf8("abcd"));
@@ -41,7 +47,7 @@ TEST(IsUTF8Test, sequence_1_byte)
 
 TEST(IsUTF8Test, sequence_2_bytes_first)
 {
-    char buf[] = "фЫваолдж";
+    U8BUF(u8"фЫваолдж")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0xFF;
@@ -50,7 +56,7 @@ TEST(IsUTF8Test, sequence_2_bytes_first)
 
 TEST(IsUTF8Test, sequence_2_bytes_second)
 {
-    char buf[] = "фЫваолдж";
+    U8BUF(u8"фЫваолдж")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[3] = 0x7F;
@@ -59,7 +65,7 @@ TEST(IsUTF8Test, sequence_2_bytes_second)
 
 TEST(IsUTF8Test, sequence_2_bytes_C2)
 {
-    char buf[] = "фЫваолдж";
+    U8BUF(u8"фЫваолдж")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0xC1;
@@ -68,7 +74,7 @@ TEST(IsUTF8Test, sequence_2_bytes_C2)
 
 TEST(IsUTF8Test, sequence_3_bytes_first)
 {
-    char buf[] = "_ह_€_한_";
+    U8BUF(u8"_ह_€_한_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[1] = 0xFF;
@@ -77,7 +83,7 @@ TEST(IsUTF8Test, sequence_3_bytes_first)
 
 TEST(IsUTF8Test, sequence_3_bytes_second)
 {
-    char buf[] = "_ह_€_한_";
+    U8BUF(u8"_ह_€_한_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0x7F;
@@ -86,7 +92,7 @@ TEST(IsUTF8Test, sequence_3_bytes_second)
 
 TEST(IsUTF8Test, sequence_3_bytes_third)
 {
-    char buf[] = "_ह_€_한_";
+    U8BUF(u8"_ह_€_한_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[3] = 0x7F;
@@ -95,7 +101,7 @@ TEST(IsUTF8Test, sequence_3_bytes_third)
 
 TEST(IsUTF8Test, sequence_3_bytes_E0)
 {
-    char buf[] = "_ह_€_한_";
+    U8BUF(u8"_ह_€_한_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0x9F;
@@ -104,7 +110,7 @@ TEST(IsUTF8Test, sequence_3_bytes_E0)
 
 TEST(IsUTF8Test, sequence_3_bytes_ED)
 {
-    char buf[] = "_한_€_ह_";
+    U8BUF(u8"_한_€_ह_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0xA1;
@@ -113,7 +119,7 @@ TEST(IsUTF8Test, sequence_3_bytes_ED)
 
 TEST(IsUTF8Test, sequence_4_bytes_first)
 {
-    char buf[] = "_𐍈_𐍈_😁_";
+    U8BUF(u8"_𐍈_𐍈_😁_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[1] = 0xFF;
@@ -122,7 +128,7 @@ TEST(IsUTF8Test, sequence_4_bytes_first)
 
 TEST(IsUTF8Test, sequence_4_bytes_second)
 {
-    char buf[] = "_𐍈_𐍈_😁_";
+    U8BUF(u8"_𐍈_𐍈_😁_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0x7F;
@@ -131,7 +137,7 @@ TEST(IsUTF8Test, sequence_4_bytes_second)
 
 TEST(IsUTF8Test, sequence_4_bytes_third)
 {
-    char buf[] = "_𐍈_𐍈_😁_";
+    U8BUF(u8"_𐍈_𐍈_😁_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[3] = 0x7F;
@@ -140,7 +146,7 @@ TEST(IsUTF8Test, sequence_4_bytes_third)
 
 TEST(IsUTF8Test, sequence_4_bytes_fourth)
 {
-    char buf[] = "_𐍈_𐍈_😁_";
+    U8BUF(u8"_𐍈_𐍈_😁_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[4] = 0x7F;
@@ -149,7 +155,7 @@ TEST(IsUTF8Test, sequence_4_bytes_fourth)
 
 TEST(IsUTF8Test, sequence_4_bytes_F0)
 {
-    char buf[] = "_𐍈_𐍈_😁_";
+    U8BUF(u8"_𐍈_𐍈_😁_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0x8F;
@@ -158,7 +164,7 @@ TEST(IsUTF8Test, sequence_4_bytes_F0)
 
 TEST(IsUTF8Test, sequence_4_bytes_F4)
 {
-    char buf[] = "_􏿿_𐍈_😁_";
+    U8BUF(u8"_􏿿_𐍈_😁_")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[2] = 0x90;
@@ -167,7 +173,7 @@ TEST(IsUTF8Test, sequence_4_bytes_F4)
 
 TEST(IsUTF8Test, sequence_trim_2_bytes)
 {
-    char buf[] = "1234";
+    U8BUF(u8"1234")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[3] = 0xC2;
@@ -176,7 +182,7 @@ TEST(IsUTF8Test, sequence_trim_2_bytes)
 
 TEST(IsUTF8Test, sequence_trim_3_bytes)
 {
-    char buf[] = "1234";
+    U8BUF(u8"1234")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[3] = 0xE1;
@@ -188,7 +194,7 @@ TEST(IsUTF8Test, sequence_trim_3_bytes)
 
 TEST(IsUTF8Test, sequence_trim_4_bytes)
 {
-    char buf[] = "1234";
+    U8BUF(u8"1234")
 
     EXPECT_TRUE(is_utf8(buf));
     buf[3] = 0xF1;
@@ -208,7 +214,7 @@ TEST(FixUTF8Test, empty)
 
 TEST(FixUTF8Test, sequence_1_byte)
 {
-    char buf[] = "1234";
+    U8BUF(u8"1234")
     buf[1] = 0xFF;
 
     EXPECT_EQ(fix_utf8(buf, "*"), "1*34");
@@ -220,67 +226,67 @@ TEST(FixUTF8Test, sequence_1_byte)
 
 TEST(FixUTF8Test, sequence_2_bytes_first)
 {
-    char buf[] = "фЫваолдж";
+    U8BUF(u8"фЫваолдж")
     buf[2] = 0xFF;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "ф**ваолдж");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф**ваолдж");
     buf[14] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "ф**ваолд**");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф**ваолд**");
     buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "****ваолд**");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"****ваолд**");
 }
 
 TEST(FixUTF8Test, sequence_2_bytes_second)
 {
-    char buf[] = "фЫваолдж";
+    U8BUF(u8"фЫваолдж")
     buf[3] = 0x7F;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "ф*ваолдж");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф*ваолдж");
     buf[15] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "ф*ваолд*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф*ваолд*");
     buf[1] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**ваолд*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**ваолд*");
 }
 
 TEST(FixUTF8Test, sequence_3_bytes_first)
 {
-    char buf[] = "_ह_€_한";
+    U8BUF(u8"_ह_€_한")
     buf[1] = 0xFF;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_***_€_한");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_***_€_한");
     buf[9] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_***_€_***");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_***_€_***");
     buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "****_€_***");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"****_€_***");
 }
 
 TEST(FixUTF8Test, sequence_3_bytes_second)
 {
-    char buf[] = "_ह_€_한";
+    U8BUF(u8"_ह_€_한")
     buf[2] = 0x7F;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_한");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_한");
     buf[10] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_*");
     buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**_€_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_€_*");
 }
 
 TEST(FixUTF8Test, sequence_3_bytes_third)
 {
-    char buf[] = "_ह_€_한";
+    U8BUF(u8"_ह_€_한")
     buf[3] = 0x7F;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_한");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_한");
     buf[11] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_€_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_*");
     buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**_€_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_€_*");
 }
 
 TEST(FixUTF8Test, sequence_4_bytes_first)
 {
-    char buf[] = "_􏿿_𐍈_😁";
+    U8BUF(u8"_􏿿_𐍈_😁")
     buf[1] = 0xFF;
 
     EXPECT_EQ(fix_utf8(buf, "*"), "_****_𐍈_😁");
@@ -292,7 +298,7 @@ TEST(FixUTF8Test, sequence_4_bytes_first)
 
 TEST(FixUTF8Test, sequence_4_bytes_second)
 {
-    char buf[] = "_􏿿_𐍈_😁";
+    U8BUF(u8"_􏿿_𐍈_😁")
     buf[2] = 0x7F;
 
     EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
@@ -304,26 +310,26 @@ TEST(FixUTF8Test, sequence_4_bytes_second)
 
 TEST(FixUTF8Test, sequence_4_bytes_third)
 {
-    char buf[] = "_􏿿_𐍈_😁";
+    U8BUF(u8"_􏿿_𐍈_😁")
     buf[3] = 0x7F;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_😁");
     buf[13] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_*");
     buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_𐍈_*");
 }
 
 TEST(FixUTF8Test, sequence_4_bytes_fourth)
 {
-    char buf[] = "_􏿿_𐍈_😁";
+    U8BUF(u8"_􏿿_𐍈_😁")
     buf[4] = 0x7F;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_😁");
     buf[14] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_*");
     buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_𐍈_*");
 }
 
 TEST(FixUTF8Test, sequence_2_bytes_1_char_trim)
@@ -365,12 +371,12 @@ TEST(FixUTF8Test, sequence_4_bytes_1_char_trim)
 
 TEST(FixUTF8Test, sequence_imcomplete)
 {
-    char buf[] = "01Ы4_€9_😁";
+    U8BUF(u8"01Ы4_€9_😁")
     buf[0] = 0xC2;
     buf[6] = 0xF0;
     buf[10] = 0xE0;
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "*Ы4_****");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"*Ы4_****");
     buf[2] = 0xE1;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**_****");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_****");
 }
