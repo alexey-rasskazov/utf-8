@@ -31,6 +31,12 @@ using u8t = std::decay_t<decltype(u8""[0])>; // char until C++20, char8_t since 
     u8t u8buf[] = text; \
     char *buf = reinterpret_cast<char*>(u8buf);
 
+#define SET_BUF_BYTE(ind, val) \
+    ((unsigned char*)buf)[ind] = (unsigned char)(val);
+
+#define SET_BYTE(buf, ind, val) \
+    ((unsigned char*)(buf))[ind] = (unsigned char)(val);
+
 TEST(IsUTF8Test, empty)
 {
     EXPECT_TRUE(is_utf8(""));
@@ -39,7 +45,7 @@ TEST(IsUTF8Test, empty)
 TEST(IsUTF8Test, sequence_1_byte)
 {
     U8BUF(u8"1234")
-    buf[1] = 0xFF;
+    SET_BUF_BYTE(1, 0xFF)
 
     EXPECT_TRUE(is_utf8("abcd"));
     EXPECT_FALSE(is_utf8(buf));
@@ -47,127 +53,127 @@ TEST(IsUTF8Test, sequence_1_byte)
 
 TEST(IsUTF8Test, sequence_2_bytes_first)
 {
-    U8BUF(u8"фЫваолдж")
+    U8BUF(u8"\u0444\u042b\u0432\u0430\u043e\u043b\u0434\u0436")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0xFF;
+    SET_BUF_BYTE(2, 0xFF)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_2_bytes_second)
 {
-    U8BUF(u8"фЫваолдж")
+    U8BUF(u8"\u0444\u042b\u0432\u0430\u043e\u043b\u0434\u0436")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[3] = 0x7F;
+    SET_BUF_BYTE(3, 0x7F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_2_bytes_C2)
 {
-    U8BUF(u8"фЫваолдж")
+    U8BUF(u8"\u0444\u042b\u0432\u0430\u043e\u043b\u0434\u0436")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0xC1;
+    SET_BUF_BYTE(2, 0xC1)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_3_bytes_first)
 {
-    U8BUF(u8"_ह_€_한_")
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[1] = 0xFF;
+    SET_BUF_BYTE(1, 0xFF)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_3_bytes_second)
 {
-    U8BUF(u8"_ह_€_한_")
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0x7F;
+    SET_BUF_BYTE(2, 0x7F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_3_bytes_third)
 {
-    U8BUF(u8"_ह_€_한_")
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[3] = 0x7F;
+    SET_BUF_BYTE(3, 0x7F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_3_bytes_E0)
 {
-    U8BUF(u8"_ह_€_한_")
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0x9F;
+    SET_BUF_BYTE(2, 0x9F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_3_bytes_ED)
 {
-    U8BUF(u8"_한_€_ह_")
+    U8BUF(u8"\u005f\ud55c\u005f\u20ac\u005f\u0939\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0xA1;
+    SET_BUF_BYTE(2, 0xA1)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_4_bytes_first)
 {
-    U8BUF(u8"_𐍈_𐍈_😁_")
+    U8BUF(u8"\u005f\U00010348\u005f\U00010348\u005f\U0001f601\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[1] = 0xFF;
+    SET_BUF_BYTE(1, 0xFF)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_4_bytes_second)
 {
-    U8BUF(u8"_𐍈_𐍈_😁_")
+    U8BUF(u8"\u005f\U00010348\u005f\U00010348\u005f\U0001f601\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0x7F;
+    SET_BUF_BYTE(2, 0x7F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_4_bytes_third)
 {
-    U8BUF(u8"_𐍈_𐍈_😁_")
+    U8BUF(u8"\u005f\U00010348\u005f\U00010348\u005f\U0001f601\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[3] = 0x7F;
+    SET_BUF_BYTE(3, 0x7F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_4_bytes_fourth)
 {
-    U8BUF(u8"_𐍈_𐍈_😁_")
+    U8BUF(u8"\u005f\U00010348\u005f\U00010348\u005f\U0001f601\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[4] = 0x7F;
+    SET_BUF_BYTE(4, 0x7F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_4_bytes_F0)
 {
-    U8BUF(u8"_𐍈_𐍈_😁_")
+    U8BUF(u8"\u005f\U00010348\u005f\U00010348\u005f\U0001f601\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0x8F;
+    SET_BUF_BYTE(2, 0x8F)
     EXPECT_FALSE(is_utf8(buf));
 }
 
 TEST(IsUTF8Test, sequence_4_bytes_F4)
 {
-    U8BUF(u8"_􏿿_𐍈_😁_")
+    U8BUF(u8"\u005f\U0010ffff\u005f\U00010348\u005f\U0001f601\u005f")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[2] = 0x90;
+    SET_BUF_BYTE(2, 0x90)
     EXPECT_FALSE(is_utf8(buf));
 }
 
@@ -176,7 +182,7 @@ TEST(IsUTF8Test, sequence_trim_2_bytes)
     U8BUF(u8"1234")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[3] = 0xC2;
+    SET_BUF_BYTE(3, 0xC2)
     EXPECT_FALSE(is_utf8(buf));
 }
 
@@ -185,10 +191,10 @@ TEST(IsUTF8Test, sequence_trim_3_bytes)
     U8BUF(u8"1234")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[3] = 0xE1;
+    SET_BUF_BYTE(3, 0xE1)
     EXPECT_FALSE(is_utf8(buf));
-    buf[2] = 0xE1;
-    buf[3] = 0x80;
+    SET_BUF_BYTE(2, 0xE1)
+    SET_BUF_BYTE(3, 0x80)
     EXPECT_FALSE(is_utf8(buf));
 }
 
@@ -197,13 +203,13 @@ TEST(IsUTF8Test, sequence_trim_4_bytes)
     U8BUF(u8"1234")
 
     EXPECT_TRUE(is_utf8(buf));
-    buf[3] = 0xF1;
+    SET_BUF_BYTE(3, 0xF1)
     EXPECT_FALSE(is_utf8(buf));
-    buf[2] = 0xF1;
-    buf[3] = 0x80;
+    SET_BUF_BYTE(2, 0xF1)
+    SET_BUF_BYTE(3, 0x80)
     EXPECT_FALSE(is_utf8(buf));
-    buf[1] = 0xF1;
-    buf[2] = 0x80;
+    SET_BUF_BYTE(1, 0xF1)
+    SET_BUF_BYTE(2, 0x80)
     EXPECT_FALSE(is_utf8(buf));
 }
 
@@ -215,127 +221,127 @@ TEST(FixUTF8Test, empty)
 TEST(FixUTF8Test, sequence_1_byte)
 {
     U8BUF(u8"1234")
-    buf[1] = 0xFF;
+    SET_BUF_BYTE(1, 0xFF);
 
     EXPECT_EQ(fix_utf8(buf, "*"), "1*34");
-    buf[3] = 0xFF;
+    SET_BUF_BYTE(3, 0xFF)
     EXPECT_EQ(fix_utf8(buf, "*"), "1*3*");
-    buf[0] = 0xFF;
+    SET_BUF_BYTE(0, 0xFF)
     EXPECT_EQ(fix_utf8(buf, "*"), "**3*");
 }
 
 TEST(FixUTF8Test, sequence_2_bytes_first)
 {
-    U8BUF(u8"фЫваолдж")
-    buf[2] = 0xFF;
+    U8BUF(u8"\u0444\u042b\u0432\u0430\u043e\u043b\u0434\u0436")
+    SET_BUF_BYTE(2, 0xFF)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф**ваолдж");
-    buf[14] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф**ваолд**");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"****ваолд**");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u0444\u002a\u002a\u0432\u0430\u043e\u043b\u0434\u0436");
+    SET_BUF_BYTE(14, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u0444\u002a\u002a\u0432\u0430\u043e\u043b\u0434\u002a\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u002a\u002a\u0432\u0430\u043e\u043b\u0434\u002a\u002a");
 }
 
 TEST(FixUTF8Test, sequence_2_bytes_second)
 {
-    U8BUF(u8"фЫваолдж")
-    buf[3] = 0x7F;
+    U8BUF(u8"\u0444\u042b\u0432\u0430\u043e\u043b\u0434\u0436")
+    SET_BUF_BYTE(3, 0x7F)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф*ваолдж");
-    buf[15] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"ф*ваолд*");
-    buf[1] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**ваолд*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u0444\u002a\u0432\u0430\u043e\u043b\u0434\u0436");
+    SET_BUF_BYTE(15, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u0444\u002a\u0432\u0430\u043e\u043b\u0434\u002a");
+    SET_BUF_BYTE(1, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u0432\u0430\u043e\u043b\u0434\u002a");
 }
 
 TEST(FixUTF8Test, sequence_3_bytes_first)
 {
-    U8BUF(u8"_ह_€_한")
-    buf[1] = 0xFF;
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c")
+    SET_BUF_BYTE(1, 0xFF)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_***_€_한");
-    buf[9] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_***_€_***");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"****_€_***");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u002a\u002a\u005f\u20ac\u005f\ud55c");
+    SET_BUF_BYTE(9, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u002a\u002a\u005f\u20ac\u005f\u002a\u002a\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u002a\u002a\u005f\u20ac\u005f\u002a\u002a\u002a");
 }
 
 TEST(FixUTF8Test, sequence_3_bytes_second)
 {
-    U8BUF(u8"_ह_€_한")
-    buf[2] = 0x7F;
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c")
+    SET_BUF_BYTE(2, 0x7F)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_한");
-    buf[10] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_*");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_€_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\u20ac\u005f\ud55c");
+    SET_BUF_BYTE(10, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\u20ac\u005f\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u005f\u20ac\u005f\u002a");
 }
 
 TEST(FixUTF8Test, sequence_3_bytes_third)
 {
-    U8BUF(u8"_ह_€_한")
-    buf[3] = 0x7F;
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c")
+    SET_BUF_BYTE(3, 0x7F)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_한");
-    buf[11] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_€_*");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_€_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\u20ac\u005f\ud55c");
+    SET_BUF_BYTE(11, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\u20ac\u005f\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u005f\u20ac\u005f\u002a");
 }
 
 TEST(FixUTF8Test, sequence_4_bytes_first)
 {
-    U8BUF(u8"_􏿿_𐍈_😁")
-    buf[1] = 0xFF;
+    U8BUF(u8"\u005f\U0010ffff\u005f\U00010348\u005f\U0001f601")
+    SET_BUF_BYTE(1, 0xFF)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_****_𐍈_😁");
-    buf[11] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_****_𐍈_****");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "*****_𐍈_****");
+    EXPECT_EQ(fix_utf8(buf, "*"),  (const char*)u8"\u005f\u002a\u002a\u002a\u002a\u005f\U00010348\u005f\U0001f601");
+    SET_BUF_BYTE(11, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"),  (const char*)u8"\u005f\u002a\u002a\u002a\u002a\u005f\U00010348\u005f\u002a\u002a\u002a\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"),  (const char*)u8"\u002a\u002a\u002a\u002a\u002a\u005f\U00010348\u005f\u002a\u002a\u002a\u002a");
 }
 
 TEST(FixUTF8Test, sequence_4_bytes_second)
 {
-    U8BUF(u8"_􏿿_𐍈_😁")
-    buf[2] = 0x7F;
+    U8BUF(u8"\u005f\U0010ffff\u005f\U00010348\u005f\U0001f601")
+    SET_BUF_BYTE(2, 0x7F)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_😁");
-    buf[12] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), "_*_𐍈_*");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), "**_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"),  (const char*)u8"\u005f\u002a\u005f\U00010348\u005f\U0001f601");
+    SET_BUF_BYTE(12, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"),  (const char*)u8"\u005f\u002a\u005f\U00010348\u005f\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"),  (const char*)u8"\u002a\u002a\u005f\U00010348\u005f\u002a");
 }
 
 TEST(FixUTF8Test, sequence_4_bytes_third)
 {
-    U8BUF(u8"_􏿿_𐍈_😁")
-    buf[3] = 0x7F;
+    U8BUF(u8"\u005f\U0010ffff\u005f\U00010348\u005f\U0001f601")
+    SET_BUF_BYTE(3, 0x7F)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_😁");
-    buf[13] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_*");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\U00010348\u005f\U0001f601");
+    SET_BUF_BYTE(13, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\U00010348\u005f\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u005f\U00010348\u005f\u002a");
 }
 
 TEST(FixUTF8Test, sequence_4_bytes_fourth)
 {
-    U8BUF(u8"_􏿿_𐍈_😁")
-    buf[4] = 0x7F;
+    U8BUF(u8"\u005f\U0010ffff\u005f\U00010348\u005f\U0001f601")
+    SET_BUF_BYTE(4, 0x7F)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_😁");
-    buf[14] = 0x7F;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"_*_𐍈_*");
-    buf[0] = 0xFF;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_𐍈_*");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\U00010348\u005f\U0001f601");
+    SET_BUF_BYTE(14, 0x7F)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u005f\u002a\u005f\U00010348\u005f\u002a");
+    SET_BUF_BYTE(0, 0xFF)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u005f\U00010348\u005f\u002a");
 }
 
 TEST(FixUTF8Test, sequence_2_bytes_1_char_trim)
 {
     char buf1[] = "1";
-    buf1[0] = 0xC2;
+    SET_BYTE(buf1, 0, 0xC2)
 
     EXPECT_EQ(fix_utf8(buf1, "*"), "*");
 }
@@ -343,10 +349,10 @@ TEST(FixUTF8Test, sequence_2_bytes_1_char_trim)
 TEST(FixUTF8Test, sequence_3_bytes_1_char_trim)
 {
     char buf1[] = "1";
-    buf1[0] = 0xE0;
+    SET_BYTE(buf1, 0, 0xE0)
     char buf2[] = "12";
-    buf2[0] = 0xE0;
-    buf2[1] = 0xA0;
+    SET_BYTE(buf2, 0, 0xE0)
+    SET_BYTE(buf2, 1, 0xA0)
 
     EXPECT_EQ(fix_utf8(buf1, "*"), "*");
     EXPECT_EQ(fix_utf8(buf2, "*"), "*");
@@ -355,14 +361,14 @@ TEST(FixUTF8Test, sequence_3_bytes_1_char_trim)
 TEST(FixUTF8Test, sequence_4_bytes_1_char_trim)
 {
     char buf1[] = "1";
-    buf1[0] = 0xF0;
+    SET_BYTE(buf1, 0, 0xF0)
     char buf2[] = "12";
-    buf2[0] = 0xF4;
-    buf2[1] = 0x80;
+    SET_BYTE(buf2, 0, 0xF4)
+    SET_BYTE(buf2, 1, 0x80)
     char buf3[] = "123";
-    buf3[0] = 0xF4;
-    buf3[1] = 0x80;
-    buf3[2] = 0x80;
+    SET_BYTE(buf3, 0, 0xF4)
+    SET_BYTE(buf3, 1, 0x80)
+    SET_BYTE(buf3, 2, 0x80)
 
     EXPECT_EQ(fix_utf8(buf1, "*"), "*");
     EXPECT_EQ(fix_utf8(buf2, "*"), "*");
@@ -371,12 +377,12 @@ TEST(FixUTF8Test, sequence_4_bytes_1_char_trim)
 
 TEST(FixUTF8Test, sequence_imcomplete)
 {
-    U8BUF(u8"01Ы4_€9_😁")
-    buf[0] = 0xC2;
-    buf[6] = 0xF0;
-    buf[10] = 0xE0;
+    U8BUF(u8"\u0030\u0031\u042b\u0034\u005f\u20ac\u0039\u005f\U0001f601")
+    SET_BUF_BYTE(0, 0xC2)
+    SET_BUF_BYTE(6, 0xF0)
+    SET_BUF_BYTE(10, 0xE0)
 
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"*Ы4_****");
-    buf[2] = 0xE1;
-    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"**_****");
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u042b\u0034\u005f\u002a\u002a\u002a\u002a");
+    SET_BUF_BYTE(2, 0xE1)
+    EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u005f\u002a\u002a\u002a\u002a");
 }
