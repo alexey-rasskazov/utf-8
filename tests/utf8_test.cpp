@@ -386,3 +386,43 @@ TEST(FixUTF8Test, sequence_imcomplete)
     SET_BUF_BYTE(2, 0xE1)
     EXPECT_EQ(fix_utf8(buf, "*"), (const char*)u8"\u002a\u002a\u005f\u002a\u002a\u002a\u002a");
 }
+
+TEST(UTF8LengthTest, length_empty)
+{
+    EXPECT_EQ(length(""), 0);
+}
+
+TEST(UTF8LengthTest, length_ascii)
+{
+    EXPECT_EQ(length("abcd 123"), 8);
+}
+
+TEST(UTF8LengthTest, length_2)
+{
+    U8BUF(u8"\u0444\u042b\u0432\u0430\u043e\u043b\u0434\u0436")
+    EXPECT_EQ(length(buf), 8);
+}
+
+TEST(UTF8LengthTest, length_3)
+{
+    U8BUF(u8"\u005f\u0939\u005f\u20ac\u005f\ud55c\u005f")
+    EXPECT_EQ(length(buf), 7);
+}
+
+TEST(UTF8LengthTest, length_4)
+{
+    U8BUF(u8"\u0030\u0031\u042b\u0034\u005f\u20ac\u0039\u005f\U0001f601")
+    EXPECT_EQ(length(buf), 9);
+}
+
+TEST(UTF8LengthTest, length_broken)
+{
+    U8BUF(u8"\u0030\u0031\u042b\u0034\u005f\u20ac\u0039\u005f\U0001f601")
+    SET_BUF_BYTE(0, 0xC2)
+    SET_BUF_BYTE(6, 0xF0)
+    SET_BUF_BYTE(10, 0xE0)
+
+    EXPECT_EQ(length(buf), 8);
+    SET_BUF_BYTE(2, 0xE1)
+    EXPECT_EQ(length(buf), 7);
+}

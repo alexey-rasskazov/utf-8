@@ -180,3 +180,49 @@ std::string utf8::fix_utf8(const std::string& src, const std::string& replacemen
 
     return res;
 }
+
+size_t utf8::length(const char* str)
+{
+    if (str == nullptr) return 0;
+    const unsigned char * bytes = (const unsigned char *)str;
+	size_t count = 0;
+
+	while (*bytes)
+	{
+        // 1 byte per symbol
+		if ((*bytes & 0x80) == 0x00)
+		{
+			bytes++;
+		}
+		else
+        {
+            unsigned char first_byte = *bytes;
+            // 2 bytes per symbol
+            if ((first_byte & 0xE0) == 0xC0)
+            {
+                bytes += 2;
+            }
+            // 3 bytes per symbol
+            else if ((first_byte & 0xF0) == 0xE0) 
+            {
+                bytes += 3;
+            }
+            else if ((first_byte & 0xF8) == 0xF0)
+            {
+                bytes += 4;
+            }
+            else
+            {
+                bytes++;
+            }
+        }
+        count++;
+	}
+
+    return count;
+}
+
+size_t utf8::length(const std::string &str)
+{
+    return length(str.c_str());
+}
