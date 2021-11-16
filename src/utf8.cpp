@@ -25,16 +25,16 @@
 const char* find_invalid_byte(const char* str, int& num_bytes)
 {
     const unsigned char * bytes = (const unsigned char *)str;
-	int num;
+    int num;
 
-	while (*bytes)
-	{
+    while (*bytes)
+    {
         // 1 byte per symbol
-		if ((*bytes & 0x80) == 0x00)
-		{
-			bytes++;
-		}
-		else
+        if ((*bytes & 0x80) == 0x00)
+        {
+            bytes++;
+        }
+        else
         {
             unsigned char first_byte = *bytes;
             // 2 bytes per symbol
@@ -112,7 +112,7 @@ const char* find_invalid_byte(const char* str, int& num_bytes)
 
             bytes += num;
         }
-	}
+    }
 
     return nullptr;
 }
@@ -185,16 +185,16 @@ size_t utf8::length(const char* str)
 {
     if (str == nullptr) return 0;
     const unsigned char * bytes = (const unsigned char *)str;
-	size_t count = 0;
+    size_t count = 0;
 
-	while (*bytes)
-	{
+    while (*bytes)
+    {
         // 1 byte per symbol
-		if ((*bytes & 0x80) == 0x00)
-		{
-			bytes++;
-		}
-		else
+        if ((*bytes & 0x80) == 0x00)
+        {
+            bytes++;
+        }
+        else
         {
             unsigned char first_byte = *bytes;
             // 2 bytes per symbol
@@ -217,7 +217,7 @@ size_t utf8::length(const char* str)
             }
         }
         count++;
-	}
+    }
 
     return count;
 }
