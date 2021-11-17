@@ -426,3 +426,23 @@ TEST(UTF8LengthTest, length_broken)
     SET_BUF_BYTE(2, 0xE1)
     EXPECT_EQ(length(buf), 7);
 }
+
+TEST(UTF8ToLower, lower_ascii)
+{
+    EXPECT_EQ(to_lower("ab cdez ABC ZX-091.FOp"), "ab cdez abc zx-091.fop");
+}
+
+TEST(UTF8ToLower, lower_cyrillic)
+{
+    EXPECT_EQ(to_lower("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩЪЫЬЭЮЯ"), "абвгдеёжзийклмнопрстуфхцчщъыьэюя");
+}
+
+TEST(UTF8ToUpper, upper_ascii)
+{
+    EXPECT_EQ(to_upper("ab@ cdez AB&C ZX-091.FOp"), "AB@ CDEZ AB&C ZX-091.FOP");
+}
+
+TEST(UTF8ToUpper, upper_cyrillic)
+{
+    EXPECT_EQ(to_upper("абвгдеёжзийклмнопрстуфхцчщъыьэюя"), "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩЪЫЬЭЮЯ");
+}

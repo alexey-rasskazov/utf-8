@@ -226,3 +226,160 @@ size_t utf8::length(const std::string &str)
 {
     return length(str.c_str());
 }
+
+static char asciitolower(char c)
+{
+    return c <= 'Z' && c >= 'A' ? c - ('Z' - 'z') : c;
+}
+
+static char asciitoupper(char c)
+{
+    return c <= 'z' && c >= 'a' ? c + ('Z' - 'z') : c;
+}
+
+static char* tolower2(unsigned char *res, unsigned char c1, unsigned char c2)
+{
+    switch (c1) {
+        case 0xD0:
+            if (c2 >= 0x90) {
+                if (c2 <= 0x9F) { // [A..П]
+                    c2 = 0xB0 + (c2 - 0x90);
+                } else if (c2 <= 0xAF) { // [Р..Я]
+                    c1 = 0xD1;
+                    c2 = 0x80 + (c2 - 0xA0);
+                }
+            } else if (c2 == 0x81) {
+                c1 = 0xD1; c2 = 0x91; // ё
+            }
+        break;
+    }
+    res[0] = c1;
+    res[1] = c2;
+    return (char*)res;
+}
+
+static char* toupper2(unsigned char *res, unsigned char c1, unsigned char c2)
+{
+    switch (c1) {
+        case 0xD0:
+            if (c2 >= 0xB0 && c2 <= 0xBF) { // [a..п]
+                c2 = 0x90 + (c2 - 0xB0);
+            }
+        break;
+        case 0xD1:
+            if (c2 >= 0x80 && c2 <= 0x8F) { // [р..я]
+                c1 = 0xD0;
+                c2 = 0xA0 + (c2 - 0x80);
+            } else if (c2 == 0x91) {
+                c1 = 0xD0; c2 = 0x81; // Ё
+            }
+        break;
+    }
+    res[0] = c1;
+    res[1] = c2;
+    return (char*)res;
+}
+
+std::string utf8::to_lower(const std::string &str)
+{
+    const unsigned char * bytes = (const unsigned char *)str.c_str();
+    std::string result;
+    result.reserve(str.length());
+    unsigned char tmp[5];
+
+    while (*bytes)
+    {
+        // 1 byte per symbol
+        if ((*bytes & 0x80) == 0x00)
+        {
+            result += asciitolower(((const char*)bytes)[0]);
+            bytes++;
+        }
+        else
+        {
+            unsigned char first_byte = *bytes;
+            // 2 bytes per symbol
+            if ((first_byte & 0xE0) == 0xC0)
+            {
+                tmp[2] = 0;
+                result += tolower2(tmp, first_byte, bytes[1]);
+                bytes += 2;
+            }
+            // 3 bytes per symbol
+            else if ((first_byte & 0xF0) == 0xE0) 
+            {
+                result += ((const char*)bytes)[0];
+                result += ((const char*)bytes)[1];
+                result += ((const char*)bytes)[2];
+                bytes += 3;
+            }
+            else if ((first_byte & 0xF8) == 0xF0)
+            {
+                result += ((const char*)bytes)[0];
+                result += ((const char*)bytes)[1];
+                result += ((const char*)bytes)[2];
+                result += ((const char*)bytes)[3];
+                bytes += 4;
+            }
+            else
+            {
+                result += ((const char*)bytes)[0];
+                bytes++;
+            }
+        }
+    }
+
+    return result;
+}
+
+std::string utf8::to_upper(const std::string &str)
+{
+    const unsigned char * bytes = (const unsigned char *)str.c_str();
+    std::string result;
+    result.reserve(str.length());
+    unsigned char tmp[5];
+
+    while (*bytes)
+    {
+        // 1 byte per symbol
+        if ((*bytes & 0x80) == 0x00)
+        {
+            result += asciitoupper(((const char*)bytes)[0]);
+            bytes++;
+        }
+        else
+        {
+            unsigned char first_byte = *bytes;
+            // 2 bytes per symbol
+            if ((first_byte & 0xE0) == 0xC0)
+            {
+                tmp[2] = 0;
+                result += toupper2(tmp, first_byte, bytes[1]);
+                bytes += 2;
+            }
+            // 3 bytes per symbol
+            else if ((first_byte & 0xF0) == 0xE0) 
+            {
+                result += ((const char*)bytes)[0];
+                result += ((const char*)bytes)[1];
+                result += ((const char*)bytes)[2];
+                bytes += 3;
+            }
+            else if ((first_byte & 0xF8) == 0xF0)
+            {
+                result += ((const char*)bytes)[0];
+                result += ((const char*)bytes)[1];
+                result += ((const char*)bytes)[2];
+                result += ((const char*)bytes)[3];
+                bytes += 4;
+            }
+            else
+            {
+                result += ((const char*)bytes)[0];
+                bytes++;
+            }
+        }
+    }
+
+    return result;
+}

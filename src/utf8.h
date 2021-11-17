@@ -17,4 +17,7 @@ namespace utf8 {
      */
     size_t length(const std::string& str);
     size_t length(const char* str);
+
+    std::string to_lower(const std::string &str);
+    std::string to_upper(const std::string &str);
 }
